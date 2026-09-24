@@ -12,3 +12,82 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+model Usuario {
+  id            Int      @id @default(autoincrement())
+  nombre        String
+  apellido      String   @default("")
+  telefono      String
+  email         String   @unique
+  passwordHash  String   @map("password_hash")
+  rol           String   @default("vendedor")
+  activo        Int      @default(1)
+  fechaCreacion DateTime @default(now()) @map("fecha_creacion")
+
+  pedidos Pedido[]
+
+  @@map("usuarios")
+}
+
+model Categoria {
+  id     Int    @id @default(autoincrement())
+  nombre String @unique
+  activo Int    @default(1)
+
+  productos Producto[]
+
+  @@map("categorias")
+}
+
+model Fabricante {
+  id     Int    @id @default(autoincrement())
+  nombre String @unique
+  activo Int    @default(1)
+
+  productos Producto[]
+
+  @@map("fabricantes")
+}
+
+model Producto {
+  id           Int    @id @default(autoincrement())
+  nombre       String
+  precio       Float
+  stock        Int
+  activo       Int    @default(1)
+  idCategoria  Int    @map("id_categoria")
+  idFabricante Int    @map("id_fabricante")
+
+  categoria  Categoria  @relation(fields: [idCategoria], references: [id], onDelete: Restrict)
+  fabricante Fabricante @relation(fields: [idFabricante], references: [id], onDelete: Restrict)
+
+  detallesPedidos DetallePedido[]
+
+  @@map("productos")
+}
+
+model Pedido {
+  id        Int      @id @default(autoincrement())
+  fecha     DateTime @default(now())
+  estado    String
+  idUsuario Int      @map("id_usuario")
+
+  usuario Usuario @relation(fields: [idUsuario], references: [id], onDelete: Restrict)
+
+  detallesPedidos DetallePedido[]
+
+  @@map("pedidos")
+}
+
+model DetallePedido {
+  id             Int   @id @default(autoincrement())
+  cantidad       Int
+  precioUnitario Float @map("precio_unitario")
+  idPedido       Int   @map("id_pedido")
+  idProducto     Int   @map("id_producto")
+
+  pedido   Pedido   @relation(fields: [idPedido], references: [id], onDelete: Cascade)
+  producto Producto @relation(fields: [idProducto], references: [id], onDelete: Restrict)
+
+  @@map("detalles_pedidos")
+}
